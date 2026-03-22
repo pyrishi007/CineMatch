@@ -1,134 +1,152 @@
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
+import { AUTH_IMG, AUTH_CONTEXT } from "@/utils/constant/links";
+import { useRef } from "react";
+import validation from "@/utils/validation";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import auth from "@/utils/firebaseSDK";
 
 const AuthPage = () => {
-  const [isSignIn, setIsSignIn] = useState(true);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const mail = useRef();
+  const password = useRef();
+
+  const context = isSignUp
+    ? AUTH_CONTEXT.auth.signUP
+    : AUTH_CONTEXT.auth.signIN;
+
+  const handleForm = () => {
+    setIsSignUp(!isSignUp);
+  };
+
+  const handleClick = () => {
+    const validate = validation(mail.current.value, password.current.value);
+    setErrorMessage(validate);
+
+    if (validate) return;
+
+    //Auth
+    if (isSignUp) {
+      //Sign UP
+      createUserWithEmailAndPassword(
+        auth,
+        mail.current.value,
+        password.current.value,
+      )
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log(user);
+        })
+        .catch((error) => {
+          const errorMessage = error.message;
+          console.log(errorMessage);
+          setErrorMessage(errorMessage);
+        });
+    } else {
+      //Sign IN
+      signInWithEmailAndPassword(
+        auth,
+        mail.current.value,
+        password.current.value,
+      )
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log(user);
+        })
+        .catch((error) => {
+          const errorMessage = error.message;
+          console.log(errorMessage);
+          setErrorMessage(errorMessage);
+        });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4">
-      <Card className="max-w-5xl w-full shadow-2xl rounded-3xl overflow-hidden grid md:grid-cols-2">
-        {/* LEFT PANEL */}
-        <div className="relative hidden md:flex flex-col justify-center px-12 text-white bg-gradient-to-br from-indigo-500 to-purple-600">
-          <div
-            className="absolute inset-0 opacity-20 bg-cover bg-center"
-            style={{
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1524985069026-dd778a71c7b4')",
-            }}
+    <div className="min-h-screen bg-slate-900/80 flex items-center justify-center px-4">
+      <div className="w-full max-w-4xl bg-white shadow-xl rounded-2xl overflow-hidden grid md:grid-cols-2">
+        <div className="relative hidden md:flex w-full max-w-md items-center justify-center rounded-2xl overflow-hidden">
+          <img
+            src={AUTH_IMG}
+            alt="auth visual"
+            className="absolute inset-0 w-full h-full object-cover"
           />
 
-          <div className="relative z-10 space-y-6">
-            <h1 className="text-4xl font-bold">Welcome to CineWatch 🎬</h1>
+          <div className="absolute inset-0 bg-slate-900/50" />
 
-            <p className="text-lg leading-relaxed">
-              Discover trending movies, build your personal watchlist, and
-              explore cinema from around the world. CineWatch helps you track
-              everything you love about films in one beautiful place.
-            </p>
+          <div className="relative px-8 text-center text-white space-y-3">
+            <h1 className="text-4xl font-semibold tracking-tight">
+              {AUTH_CONTEXT.title}
+            </h1>
 
-            <p className="opacity-90">
-              Join thousands of movie lovers who organize their favorites,
-              discover hidden gems, and stay updated with the latest releases
-              every day.
+            <p className="text-sm text-slate-300 leading-relaxed max-w-xs mx-auto">
+              {AUTH_CONTEXT.description}
             </p>
           </div>
         </div>
 
-        {/* RIGHT PANEL */}
-        <CardContent className="p-10 md:p-14">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-800">CineWatch</h2>
-            <p className="text-gray-500 mt-2">
-              Continue your cinematic journey or create a new account to start
-              exploring movies.
-            </p>
-          </div>
+        <div className="p-8 md:p-10 text-center">
+          <h2 className="text-3xl font-bold text-slate-900 mb-1">
+            {isSignUp ? "Sign up" : "Sign in"}
+          </h2>
 
-          {/* TOGGLE BUTTONS */}
-          <div className="flex mb-6 bg-gray-100 rounded-xl overflow-hidden">
-            <button
-              onClick={() => setIsSignIn(true)}
-              className={`w-1/2 py-2 font-medium transition ${
-                isSignIn
-                  ? "bg-indigo-500 text-white"
-                  : "text-gray-600"
-              }`}
-            >
-              Sign In
-            </button>
+          <p className="text-slate-500 text-sm mb-6">
+            {isSignUp ? context.title_1 : context.title_1}
+          </p>
 
-            <button
-              onClick={() => setIsSignIn(false)}
-              className={`w-1/2 py-2 font-medium transition ${
-                !isSignIn
-                  ? "bg-indigo-500 text-white"
-                  : "text-gray-600"
-              }`}
-            >
-              Sign Up
-            </button>
-          </div>
-
-          {/* SIGN IN FORM */}
-          {isSignIn ? (
-            <form className="space-y-4">
-              <input
-                type="email"
-                placeholder="Email Address"
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              />
-
-              <input
-                type="password"
-                placeholder="Password"
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              />
-
-              <Button className="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-3 rounded-xl">
-                Sign In
-              </Button>
-
-              <p className="text-sm text-gray-400 text-center">
-                Forgot your password? Reset it anytime securely.
-              </p>
-            </form>
-          ) : (
-            /* SIGN UP FORM */
-            <form className="space-y-4">
+          <div className="space-y-4">
+            {isSignUp && (
               <input
                 type="text"
-                placeholder="Full Name"
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400"
+                placeholder="Full name"
+                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-400 outline-none text-sm"
               />
+            )}
 
-              <input
-                type="email"
-                placeholder="Email Address"
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400"
-              />
+            <input
+              ref={mail}
+              type="email"
+              placeholder="Email"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-400 outline-none text-sm"
+            />
 
-              <input
-                type="password"
-                placeholder="Create Password"
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400"
-              />
-
-              <Button className="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-xl">
-                Create Account
-              </Button>
-
-              <p className="text-sm text-gray-400 text-center">
-                Start building your personal movie watchlist today with
-                CineWatch.
+            <input
+              ref={password}
+              type="password"
+              placeholder="Password"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-400 outline-none text-sm"
+            />
+            <div className="text-start">
+              <p className="ml-4 text-red-500 font-medium tracking-wide text-[12px]  ">
+                {errorMessage}
               </p>
-            </form>
-          )}
-        </CardContent>
-      </Card>
+            </div>
+
+            <button
+              type="submit"
+              onClick={handleClick}
+              className="w-full bg-purple-700 hover:bg-purple-800 text-white py-2.5 rounded-lg text-sm font-medium transition"
+            >
+              {isSignUp ? context.type : context.type}
+            </button>
+          </div>
+
+          <div className="mt-6 text-center text-xs text-slate-500">
+            {isSignUp ? context.title_3 : context.title_3}
+
+            <button
+              onClick={handleForm}
+              className="ml-1 text-purple-700 font-medium hover:underline hover:text-purple-900"
+            >
+              {isSignUp ? context.changeto : context.changeto}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
-}
-
+};
 
 export default AuthPage;
